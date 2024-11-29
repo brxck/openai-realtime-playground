@@ -4,11 +4,10 @@
 
 html,
 body {
-  @apply p-0 m-0 relative w-full h-full text-zinc-900 antialiased;
-  font-family: 'Assistant', sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
+  @apply relative w-full h-full p-0 m-0 text-zinc-900;
+  font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui,
+    helvetica neue, helvetica, Cantarell, Ubuntu, roboto, noto, arial,
+    sans-serif;
 }
 
 #root {

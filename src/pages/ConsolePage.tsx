@@ -48,42 +48,48 @@ export function ConsolePage() {
     wavStreamPlayerRef,
   } = useWaveRenderer();
 
-  const { client, isConnected, isMuted, setIsMuted, connectConversation, disconnectConversation } =
-    useRealtimeClient(
-      apiKey,
-      startTimeRef,
-      setRealtimeEvents,
-      wavStreamPlayerRef,
-      wavRecorderRef,
-      instructions + ' Memory: ' + JSON.stringify(memoryKv, null, 2),
-      [
-        {
-          schema: {
-            name: 'set_memory',
-            description:
-              'Saves important data about the user into memory. If keys are close, prefer overwriting keys rather than creating new keys.',
-            parameters: {
-              type: 'object',
-              properties: {
-                key: {
-                  type: 'string',
-                  description:
-                    'The key of the memory value. Always use lowercase and underscores, no other characters.',
-                },
-                value: {
-                  type: 'string',
-                  description: 'Value can be anything represented as a string',
-                },
+  const {
+    client,
+    isConnected,
+    isMuted,
+    setIsMuted,
+    connectConversation,
+    disconnectConversation,
+  } = useRealtimeClient(
+    apiKey,
+    startTimeRef,
+    setRealtimeEvents,
+    wavStreamPlayerRef,
+    wavRecorderRef,
+    instructions + ' Memory: ' + JSON.stringify(memoryKv, null, 2),
+    [
+      {
+        schema: {
+          name: 'set_memory',
+          description:
+            'Saves important data about the user into memory. If keys are close, prefer overwriting keys rather than creating new keys.',
+          parameters: {
+            type: 'object',
+            properties: {
+              key: {
+                type: 'string',
+                description:
+                  'The key of the memory value. Always use lowercase and underscores, no other characters.',
               },
-              required: ['key', 'value'],
+              value: {
+                type: 'string',
+                description: 'Value can be anything represented as a string',
+              },
             },
-          },
-          async fn({ key, value }: { key: string; value: string }) {
-            setMemoryKv((prev) => ({ ...prev, [key]: value }));
+            required: ['key', 'value'],
           },
         },
-      ]
-    );
+        async fn({ key, value }: { key: string; value: string }) {
+          setMemoryKv((prev) => ({ ...prev, [key]: value }));
+        },
+      },
+    ]
+  );
 
   const formatTime = useCallback((timestamp: string) => {
     const startTime = startTimeRef.current;
@@ -113,12 +119,12 @@ export function ConsolePage() {
   }, []);
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex flex-none justify-between items-center p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between flex-none p-4 border-b border-gray-200">
         <div className="flex items-center space-x-4">
           <button
             onClick={isConnected ? disconnectConversation : connectConversation}
             disabled={!apiKey}
-            className={`flex items-center gap-2 font-['Roboto_Mono'] text-xs font-normal border-none rounded-[1000px] px-6 min-h-[42px] transition-all duration-100 outline-none disabled:text-[#999] enabled:cursor-pointer px-4 py-2 rounded-md ${
+            className={`flex items-center gap-2 font-mono text-xs font-normal border-none rounded-[1000px] px-6 min-h-[42px] transition-all duration-100 outline-none disabled:text-[#999] enabled:cursor-pointer px-4 py-2 rounded-md ${
               isConnected
                 ? 'bg-red-500 hover:bg-red-600 text-white'
                 : 'bg-blue-500 hover:bg-blue-600 text-white'
@@ -129,13 +135,13 @@ export function ConsolePage() {
           {isConnected && (
             <span className="flex space-x-2">
               <button
-                className="flex items-center gap-2 font-['Roboto_Mono'] text-xs font-normal border-none rounded-[1000px] px-6 min-h-[42px] transition-all duration-100 outline-none disabled:text-[#999] enabled:cursor-pointer bg-[#101010] text-[#ececf1] hover:enabled:bg-[#404040]"
+                className="flex items-center gap-2 font-mono text-xs font-normal border-none rounded-[1000px] px-6 min-h-[42px] transition-all duration-100 outline-none disabled:text-[#999] enabled:cursor-pointer bg-[#101010] text-[#ececf1] hover:enabled:bg-[#404040]"
                 onClick={() => client.createResponse()}
               >
                 Force Reply
               </button>
               <button
-                className={`flex items-center gap-2 font-['Roboto_Mono'] text-xs font-normal border-none rounded-[1000px] px-6 min-h-[42px] transition-all duration-100 outline-none disabled:text-[#999] enabled:cursor-pointer ${
+                className={`flex items-center gap-2 font-mono text-xs font-normal border-none rounded-[1000px] px-6 min-h-[42px] transition-all duration-100 outline-none disabled:text-[#999] enabled:cursor-pointer ${
                   isMuted
                     ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
                     : 'bg-[#101010] text-[#ececf1] hover:enabled:bg-[#404040]'
@@ -157,26 +163,26 @@ export function ConsolePage() {
         </div>
       </div>
 
-      <div className="overflow-auto flex-1">
+      <div className="flex-1 overflow-auto">
         <div className="flex flex-col h-full md:flex-row">
-          <div className="overflow-auto flex-1 border-r border-gray-200">
+          <div className="flex-1 overflow-auto border-r border-gray-200">
             <div className="p-4">
               <div className="mb-4">
                 <canvas
                   ref={clientCanvasRef}
-                  className="w-full h-12 bg-gray-50 rounded"
+                  className="w-full h-12 rounded bg-gray-50"
                 />
               </div>
               <div className="mb-4">
                 <canvas
                   ref={serverCanvasRef}
-                  className="w-full h-12 bg-gray-50 rounded"
+                  className="w-full h-12 rounded bg-gray-50"
                 />
               </div>
             </div>
           </div>
 
-          <div className="overflow-auto w-full md:w-96">
+          <div className="w-full overflow-auto md:w-96">
             <div className="p-4">
               <div className="mb-4">
                 <h3 className="text-sm font-medium text-gray-700">Memory</h3>
@@ -190,7 +196,7 @@ export function ConsolePage() {
                 </h3>
                 <div
                   ref={eventsScrollRef}
-                  className="overflow-auto mt-2 space-y-2 h-full"
+                  className="h-full mt-2 space-y-2 overflow-auto"
                 >
                   {realtimeEvents.map((event, i) => (
                     <div
@@ -199,7 +205,7 @@ export function ConsolePage() {
                         event.source === 'server' ? 'bg-green-50' : 'bg-blue-50'
                       }`}
                     >
-                      <details className="flex justify-between items-center">
+                      <details className="flex items-center justify-between">
                         <summary className="font-mono">
                           {formatTime(event.time) + ' '}
                           <span className="text-xs text-gray-600">
@@ -220,7 +226,7 @@ export function ConsolePage() {
                               JSON.stringify(event.event)}
                           </span>
                         </summary>
-                        <pre className="overflow-auto mt-2 max-h-40 whitespace-pre-wrap">
+                        <pre className="mt-2 overflow-auto whitespace-pre-wrap max-h-40">
                           {JSON.stringify(event.event, null, 2)}
                         </pre>
                       </details>
