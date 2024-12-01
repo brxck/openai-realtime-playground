@@ -1,8 +1,9 @@
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useState } from 'react';
 
-import { RealtimeEvent, useRealtimeClient } from '../lib/useRealtimeClient';
+import { ExtRealtimeEvent, useRealtimeClient } from '../lib/useRealtimeClient';
 import { useWaveRenderer } from '../lib/useWaveRenderer';
 import { useUIScroller } from '../lib/useUIScroller';
+import { formatTimestamp } from '../lib/format';
 
 const instructions = `System settings:
 Tool use: enabled.
@@ -25,7 +26,7 @@ Personality:
 export function ConsolePage() {
   const startTimeRef = useRef<string>(new Date().toISOString());
 
-  const [realtimeEvents, setRealtimeEvents] = useState<RealtimeEvent[]>([]);
+  const [realtimeEvents, setRealtimeEvents] = useState<ExtRealtimeEvent[]>([]);
 
   const [memoryKv, setMemoryKv] = useState<{ [key: string]: any }>({
     todaysDate: new Date().toISOString().split('T')[0],
@@ -81,39 +82,13 @@ export function ConsolePage() {
     ]
   );
 
-  const formatTime = useCallback((timestamp: string) => {
-    const startTime = startTimeRef.current;
-    const t0 = new Date(startTime).valueOf();
-    const t1 = new Date(timestamp).valueOf();
-    const delta = t1 - t0;
-    const hs = Math.floor(delta / 10) % 100;
-    const s = Math.floor(delta / 1000) % 60;
-    const m = Math.floor(delta / 60_000) % 60;
-    const pad = (n: number) => {
-      let s = n + '';
-      while (s.length < 2) {
-        s = '0' + s;
-      }
-      return s;
-    };
-    return `${pad(m)}:${pad(s)}.${pad(hs)}`;
-  }, []);
-
-  const resetAPIKey = useCallback(() => {
-    const apiKey = prompt('OpenAI API Key');
-    if (apiKey !== null) {
-      localStorage.clear();
-      localStorage.setItem('tmp::voice_api_key', apiKey);
-      window.location.reload();
-    }
-  }, []);
   return (
     <div className="flex flex-col h-screen">
       <div className="flex items-center justify-between flex-none p-4 border-b border-gray-200">
         <div className="flex items-center space-x-4">
           <button
             onClick={isConnected ? disconnectConversation : connectConversation}
-            className={`flex items-center gap-2 font-mono text-xs font-normal border-none rounded-[1000px] px-6 min-h-[42px] transition-all duration-100 outline-none disabled:text-[#999] enabled:cursor-pointer px-4 py-2 rounded-md ${
+            className={`flex items-center gap-2 font-mono text-xs font-normal border-none min-h-[42px] transition-all duration-100 outline-none disabled:text-[#999] enabled:cursor-pointer px-4 py-2 rounded-md ${
               isConnected
                 ? 'bg-red-500 hover:bg-red-600 text-white'
                 : 'bg-blue-500 hover:bg-blue-600 text-white'
@@ -148,25 +123,24 @@ export function ConsolePage() {
       <div className="flex-1 overflow-auto">
         <div className="flex flex-col h-full md:flex-row">
           <div className="flex-1 overflow-auto border-r border-gray-200">
-            <div className="p-4">
-              <div className="mb-4">
-                <canvas
-                  ref={clientCanvasRef}
-                  className="w-full h-12 rounded bg-gray-50"
-                />
-              </div>
-              <div className="mb-4">
-                <canvas
-                  ref={serverCanvasRef}
-                  className="w-full h-12 rounded bg-gray-50"
-                />
-              </div>
-            </div>
+            <div className="p-4">test</div>
           </div>
 
           <div className="w-full overflow-auto md:w-96">
             <div className="p-4">
               <div className="mb-4">
+                <div className="mb-4">
+                  <canvas
+                    ref={clientCanvasRef}
+                    className="w-full h-12 rounded bg-gray-50"
+                  />
+                </div>
+                <div className="mb-4">
+                  <canvas
+                    ref={serverCanvasRef}
+                    className="w-full h-12 rounded bg-gray-50"
+                  />
+                </div>
                 <h3 className="text-sm font-medium text-gray-700">Memory</h3>
                 <pre className="mt-2 text-xs text-wrap">
                   {JSON.stringify(memoryKv, null, 2)}
@@ -193,19 +167,22 @@ export function ConsolePage() {
                     >
                       <details className="flex items-center justify-between">
                         <summary className="font-mono">
-                          {formatTime(event.time) + ' '}
+                          {formatTimestamp(startTimeRef.current, event.time) +
+                            ' '}
                           <span className="text-xs text-gray-600">
-                            {(event.event.event.transcript && (
-                              <p>{'"' + event.event.event.transcript + '"'}</p>
+                            {('transcript' in event.event && (
+                              <p>{'"' + event.event.transcript + '"'}</p>
                             )) ||
-                              (event.event.event.type ===
+                              (event.event.type ===
                                 'response.function_call_arguments.done' &&
-                                event.event.event.name +
+                                'name' in event.event &&
+                                'arguments' in event.event &&
+                                event.event.name +
                                   '(' +
-                                  event.event.event.arguments +
+                                  event.event.arguments +
                                   ')') || (
                                 <span className="font-mono">
-                                  {event.event.event.type}
+                                  {event.event.type}
                                 </span>
                               ) ||
                               // console.log(event.event) ||

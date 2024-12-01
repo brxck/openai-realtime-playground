@@ -4,26 +4,17 @@ import {
   Realtime,
   RealtimeClient,
   ToolHandler,
+  RealtimeEvent,
 } from 'openai-realtime-api';
 import { WavRecorder } from 'wavtools';
 
-/**
- * Type for all event logs
- */
-export interface RealtimeEvent {
-  time: string;
-  source: 'client' | 'server';
-  count?: number;
+export type ExtRealtimeEvent = RealtimeEvent & {
   error?: boolean;
-  event: {
-    event_id?: string;
-    type?: string;
-    [key: string]: any;
-  };
-}
+};
+
 export function useRealtimeClient(
   startTimeRef: any,
-  setRealtimeEvents: React.Dispatch<React.SetStateAction<RealtimeEvent[]>>,
+  setRealtimeEvents: React.Dispatch<React.SetStateAction<ExtRealtimeEvent[]>>,
   wavStreamPlayerRef: any,
   wavRecorderRef: any,
   initialInstructions: string,
@@ -126,8 +117,13 @@ export function useRealtimeClient(
         ...prev,
         {
           time: new Date().toISOString(),
-          source: 'client',
-          event: { type: 'error', error: error.error.message },
+          source: 'server',
+          event: {
+            type: 'error',
+            error: error.error,
+            event_id: error.event_id,
+          },
+          type: 'realtime.event',
         },
       ]);
     });
@@ -138,18 +134,7 @@ export function useRealtimeClient(
         event.event.response?.status === 'failed'
       ) {
         console.error('failed event ', event.event.type, event);
-        setRealtimeEvents((prev) => [
-          ...prev,
-          {
-            time: new Date().toISOString(),
-            source: event.source,
-            error: true,
-            event: {
-              ...event,
-              type: `error - ${event.event.type}`,
-            },
-          },
-        ]);
+        setRealtimeEvents((prev) => [...prev, { ...event, error: true }]);
       }
 
       if (event.source === 'server') {
@@ -184,14 +169,7 @@ export function useRealtimeClient(
         // this is the user's voice transcript
         event.source = 'client'; // force it to render as client even tho its technically not
       }
-      setRealtimeEvents((prev) => [
-        ...prev,
-        {
-          time: new Date().toISOString(),
-          source: event.source || 'client',
-          event: event,
-        },
-      ]);
+      setRealtimeEvents((prev) => [...prev, event]);
     });
 
     clientRef.current.on('conversation.updated', async ({ item, delta }) => {
