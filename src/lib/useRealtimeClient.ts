@@ -1,9 +1,4 @@
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-} from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   FormattedItem,
   Realtime,
@@ -26,7 +21,6 @@ export interface RealtimeEvent {
   };
 }
 export function useRealtimeClient(
-  apiKey: string,
   startTimeRef: any,
   setRealtimeEvents: React.Dispatch<React.SetStateAction<RealtimeEvent[]>>,
   wavStreamPlayerRef: any,
@@ -34,12 +28,12 @@ export function useRealtimeClient(
   initialInstructions: string,
   tools?: [{ schema: Realtime.PartialToolDefinition; fn: ToolHandler }]
 ) {
-  const clientRef = useRef<RealtimeClient>(
-    new RealtimeClient({
-      apiKey: apiKey,
-      dangerouslyAllowAPIKeyInBrowser: true,
-    })
-  );
+  const wsUrl =
+    process.env.NODE_ENV === 'production'
+      ? window.location.origin + '/ws'
+      : 'ws://localhost:8081/ws';
+
+  const clientRef = useRef<RealtimeClient>(new RealtimeClient({ url: wsUrl }));
   const [isConnected, setIsConnected] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [items, setItems] = useState<FormattedItem[]>([]);
@@ -208,7 +202,7 @@ export function useRealtimeClient(
     return () => {
       // Remove all tools
       tools?.forEach((obj) => clientRef.current.removeTool(obj.schema.name));
-      
+
       // Remove all event listeners
       clientRef.current.off('error');
       clientRef.current.off('realtime.event');

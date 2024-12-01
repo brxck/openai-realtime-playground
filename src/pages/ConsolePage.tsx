@@ -1,8 +1,8 @@
 import { useRef, useCallback, useState } from 'react';
 
-import { RealtimeEvent, useRealtimeClient } from '../utils/useRealtimeClient';
-import { useWaveRenderer } from '../utils/useWaveRenderer';
-import { useUIScroller } from '../utils/useUIScroller';
+import { RealtimeEvent, useRealtimeClient } from '../lib/useRealtimeClient';
+import { useWaveRenderer } from '../lib/useWaveRenderer';
+import { useUIScroller } from '../lib/useUIScroller';
 
 const instructions = `System settings:
 Tool use: enabled.
@@ -23,20 +23,11 @@ Personality:
 `;
 
 export function ConsolePage() {
-  const apiKey =
-    localStorage.getItem('tmp::voice_api_key') ||
-    prompt('OpenAI API Key') ||
-    '';
-  if (apiKey !== '') {
-    localStorage.setItem('tmp::voice_api_key', apiKey);
-  }
-
   const startTimeRef = useRef<string>(new Date().toISOString());
 
   const [realtimeEvents, setRealtimeEvents] = useState<RealtimeEvent[]>([]);
 
   const [memoryKv, setMemoryKv] = useState<{ [key: string]: any }>({
-    userName: 'swyx',
     todaysDate: new Date().toISOString().split('T')[0],
   });
 
@@ -56,7 +47,6 @@ export function ConsolePage() {
     connectConversation,
     disconnectConversation,
   } = useRealtimeClient(
-    apiKey,
     startTimeRef,
     setRealtimeEvents,
     wavStreamPlayerRef,
@@ -123,7 +113,6 @@ export function ConsolePage() {
         <div className="flex items-center space-x-4">
           <button
             onClick={isConnected ? disconnectConversation : connectConversation}
-            disabled={!apiKey}
             className={`flex items-center gap-2 font-mono text-xs font-normal border-none rounded-[1000px] px-6 min-h-[42px] transition-all duration-100 outline-none disabled:text-[#999] enabled:cursor-pointer px-4 py-2 rounded-md ${
               isConnected
                 ? 'bg-red-500 hover:bg-red-600 text-white'
@@ -153,14 +142,7 @@ export function ConsolePage() {
             </span>
           )}
         </div>
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={resetAPIKey}
-            className="text-xs text-gray-500 hover:text-gray-700"
-          >
-            Reset key: {apiKey.slice(0, 4)}...{apiKey.slice(-4)}
-          </button>
-        </div>
+        <div className="flex items-center space-x-4"></div>
       </div>
 
       <div className="flex-1 overflow-auto">
