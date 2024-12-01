@@ -184,7 +184,11 @@ export function ConsolePage() {
                     <div
                       key={i}
                       className={`text-xs p-2 rounded ${
-                        event.source === 'server' ? 'bg-green-50' : 'bg-blue-50'
+                        event.error
+                          ? 'bg-red-50'
+                          : event.source === 'server'
+                          ? 'bg-green-50'
+                          : 'bg-blue-50'
                       }`}
                     >
                       <details className="flex items-center justify-between">

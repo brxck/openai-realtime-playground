@@ -14,6 +14,7 @@ export interface RealtimeEvent {
   time: string;
   source: 'client' | 'server';
   count?: number;
+  error?: boolean;
   event: {
     event_id?: string;
     type?: string;
@@ -118,7 +119,7 @@ export function useRealtimeClient(
 
     tools?.forEach((obj) => clientRef.current.addTool(obj.schema, obj.fn));
 
-    clientRef.current.on('error', (error: any) => {
+    clientRef.current.on('error', (error) => {
       // should be Error
       console.error(error);
       setRealtimeEvents((prev) => [
@@ -126,12 +127,31 @@ export function useRealtimeClient(
         {
           time: new Date().toISOString(),
           source: 'client',
-          event: { type: 'error', error: error.message },
+          event: { type: 'error', error: error.error.message },
         },
       ]);
     });
 
-    clientRef.current.on('realtime.event', (event: any) => {
+    clientRef.current.on('realtime.event', (event) => {
+      if (
+        // @ts-expect-error trust me
+        event.event.response?.status === 'failed'
+      ) {
+        console.error('failed event ', event.event.type, event);
+        setRealtimeEvents((prev) => [
+          ...prev,
+          {
+            time: new Date().toISOString(),
+            source: event.source,
+            error: true,
+            event: {
+              ...event,
+              type: `error - ${event.event.type}`,
+            },
+          },
+        ]);
+      }
+
       if (event.source === 'server') {
         if (
           [
