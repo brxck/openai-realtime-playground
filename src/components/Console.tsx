@@ -5,6 +5,7 @@ import { useWaveRenderer } from '@/lib/useWaveRenderer';
 import { useUIScroller } from '@/lib/useUIScroller';
 import { formatTimestamp } from '@/lib/format';
 import { tools } from '@/lib/tools';
+import { Button } from './ui/button';
 
 const instructions = `System settings:
 Tool use: enabled.
@@ -55,36 +56,25 @@ export function Console() {
 
   return (
     <div className="w-full p-4 overflow-auto md:w-96">
-      <div className="flex items-center mb-4 space-x-4">
-        <button
+      <div className="flex items-center gap-2 mb-4">
+        <Button
+          variant={isConnected ? 'destructive' : 'default'}
           onClick={isConnected ? disconnectConversation : connectConversation}
-          className={`flex items-center gap-2 font-mono text-xs font-normal border-none min-h-[42px] transition-all duration-100 outline-none disabled:text-[#999] enabled:cursor-pointer px-4 py-2 rounded-md ${
-            isConnected
-              ? 'bg-red-500 hover:bg-red-600 text-white'
-              : 'bg-blue-500 hover:bg-blue-600 text-white'
-          }`}
         >
           {isConnected ? 'Disconnect' : 'Connect'}
-        </button>
+        </Button>
         {isConnected && (
-          <span className="flex space-x-2">
-            <button
-              className="flex items-center gap-2 font-mono text-xs font-normal border-none rounded-[1000px] px-6 min-h-[42px] transition-all duration-100 outline-none disabled:text-[#999] enabled:cursor-pointer bg-[#101010] text-[#ececf1] hover:enabled:bg-[#404040]"
-              onClick={() => client.createResponse()}
-            >
+          <>
+            <Button variant="outline" onClick={() => client.createResponse()}>
               Force Reply
-            </button>
-            <button
-              className={`flex items-center gap-2 font-mono text-xs font-normal border-none rounded-[1000px] px-6 min-h-[42px] transition-all duration-100 outline-none disabled:text-[#999] enabled:cursor-pointer ${
-                isMuted
-                  ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                  : 'bg-[#101010] text-[#ececf1] hover:enabled:bg-[#404040]'
-              }`}
+            </Button>
+            <Button
+              variant={isMuted ? 'default' : 'outline'}
               onClick={() => setIsMuted(!isMuted)}
             >
               {isMuted ? '🔇 Unmute' : '🔊 Mute'}
-            </button>
-          </span>
+            </Button>
+          </>
         )}
       </div>
       <div className="mb-4">
@@ -99,25 +89,21 @@ export function Console() {
           className="w-full h-12 rounded bg-gray-50"
         />
       </div>
-      <div
-        ref={eventsScrollRef}
-        className="h-full mt-2 space-y-2 overflow-auto"
-      >
+      <div ref={eventsScrollRef} className="h-full mt-2 space-y-2">
         {realtimeEvents.map((event, i) => (
           <div
             key={i}
-            className={`text-xs p-2 rounded ${
+            className={`text-xs rounded ${
               event.error
                 ? 'bg-red-50'
                 : event.source === 'server'
                 ? 'bg-green-50'
-                : 'bg-blue-50'
+                : 'bg-gray-50'
             }`}
           >
-            <details className="flex items-center justify-between">
-              <summary className="font-mono">
-                {formatTimestamp(startTimeRef.current, event.time) + ' '}
-                <span className="text-xs text-gray-600">
+            <details className="text-xs">
+              <summary className="flex items-center justify-between p-2">
+                <span>
                   {('transcript' in event.event && (
                     <p>{'"' + event.event.transcript + '"'}</p>
                   )) ||
@@ -128,11 +114,13 @@ export function Console() {
                       event.event.name + '(' + event.event.arguments + ')') || (
                       <span className="font-mono">{event.event.type}</span>
                     ) ||
-                    // console.log(event.event) ||
                     JSON.stringify(event.event)}
                 </span>
+                <span>
+                  +{formatTimestamp(startTimeRef.current, event.time) + ' '}
+                </span>
               </summary>
-              <pre className="mt-2 overflow-auto whitespace-pre-wrap max-h-40">
+              <pre className="p-2 pr-0 overflow-auto whitespace-pre max-h-96">
                 {JSON.stringify(event.event, null, 2)}
               </pre>
             </details>

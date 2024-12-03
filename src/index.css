@@ -75,13 +75,21 @@ body {
     @apply border-collapse;
   }
 
-  table.tinybase-table th,
+  table.tinybase-table tr {
+    @apply border-b border-gray-100;
+  }
+
+  table.tinybase-table tr:last-child {
+    @apply border-b-0;
+  }
+
+  table.tinybase-table tr,
   table.tinybase-table td {
-    @apply overflow-hidden py-1 px-2 whitespace-nowrap border-0 border-y border-solid border-gray-100 text-left;
+    @apply px-2 py-1 overflow-hidden text-left whitespace-nowrap;
   }
 
   table.tinybase-table thead th {
-    @apply border-b border-gray-300;
+    @apply px-2 py-1 font-semibold border-b border-gray-200 whitespace-nowrap;
   }
 
   table.tinybase-table button,

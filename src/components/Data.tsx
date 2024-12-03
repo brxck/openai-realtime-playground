@@ -8,7 +8,7 @@ export function Data() {
   const tables = ReactStore.useTableIds();
 
   return (
-    <div>
+    <div className="text-sm">
       {tables.map((tableId) => {
         const cells = Object.keys(tablesSchema[tableId]).reduce(
           (acc, cellId) => {
@@ -19,18 +19,20 @@ export function Data() {
           {} as Record<string, CustomCell>
         );
         return (
-          <div>
-            <div className="py-1 font-bold text-center capitalize">
-              {tableId}
+          <div className="mx-4 my-2">
+            <div className="p-2 font-bold capitalize">{tableId}</div>
+            <div className="border rounded-md">
+              <div className="overflow-hidden rounded-md">
+                <SortedTableInHtmlTable
+                  key={tableId}
+                  tableId={tableId}
+                  sortOnClick={true}
+                  className="w-full p-4 table-auto tinybase-table"
+                  idColumn={false}
+                  customCells={cells}
+                />
+              </div>
             </div>
-            <SortedTableInHtmlTable
-              key={tableId}
-              tableId={tableId}
-              sortOnClick={true}
-              className="w-full p-4 table-auto tinybase-table"
-              idColumn={false}
-              customCells={cells}
-            />
           </div>
         );
       })}
