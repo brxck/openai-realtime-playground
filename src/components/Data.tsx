@@ -19,14 +19,19 @@ export function Data() {
           {} as Record<string, CustomCell>
         );
         return (
-          <SortedTableInHtmlTable
-            key={tableId}
-            tableId={tableId}
-            sortOnClick={true}
-            className="w-full p-4 table-auto tinybase-table"
-            idColumn={false}
-            customCells={cells}
-          />
+          <div>
+            <div className="py-1 font-bold text-center capitalize">
+              {tableId}
+            </div>
+            <SortedTableInHtmlTable
+              key={tableId}
+              tableId={tableId}
+              sortOnClick={true}
+              className="w-full p-4 table-auto tinybase-table"
+              idColumn={false}
+              customCells={cells}
+            />
+          </div>
         );
       })}
     </div>
@@ -61,15 +66,18 @@ const HighlightedCell: CustomCell['component'] = ({
       return;
     }
 
+    const parentTr = ref.current.parentElement?.parentElement;
+    if (!parentTr) return;
     if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
-    ref.current.style.transitionDuration = 'unset';
-    ref.current.style.backgroundColor =
+
+    parentTr.style.transitionDuration = 'unset';
+    parentTr.style.backgroundColor =
       event === 'modified' ? 'rgb(59 130 246 / 0.5)' : 'rgb(34 197 94 / 0.5)';
 
     fadeTimeoutRef.current = setTimeout(() => {
-      if (!ref.current) return;
-      ref.current.style.transitionDuration = '3s';
-      ref.current.style.backgroundColor = 'white';
+      if (!parentTr) return;
+      parentTr.style.transitionDuration = '3s';
+      parentTr.style.backgroundColor = 'white';
     }, 100);
 
     lastAccessed.current = accessed;
