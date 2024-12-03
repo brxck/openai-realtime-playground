@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   FormattedItem,
-  Realtime,
   RealtimeClient,
-  ToolHandler,
   RealtimeEvent,
 } from 'openai-realtime-api';
 import { WavRecorder } from 'wavtools';
+import { ToolDefinition } from './tools';
 
 export type ExtRealtimeEvent = RealtimeEvent & {
   error?: boolean;
@@ -18,7 +17,7 @@ export function useRealtimeClient(
   wavStreamPlayerRef: any,
   wavRecorderRef: any,
   initialInstructions: string,
-  tools?: [{ schema: Realtime.PartialToolDefinition; fn: ToolHandler }]
+  tools?: ToolDefinition[]
 ) {
   const wsUrl =
     process.env.NODE_ENV === 'production'
@@ -43,7 +42,7 @@ export function useRealtimeClient(
   const disconnect = useCallback(async () => {
     const client = clientRef.current;
     if (client.isConnected) {
-      await client.disconnect();
+      client.disconnect();
     }
     setIsConnected(false);
     setItems([]);

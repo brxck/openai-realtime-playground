@@ -1,10 +1,15 @@
-import { ConsolePage } from './pages/ConsolePage';
+import { Index } from './pages/index';
+import { Inspector } from 'tinybase/ui-react-inspector';
+import { store, ReactStore } from './store';
 
 function App() {
   return (
-    <div data-component="App" className="w-full h-full">
-      <ConsolePage />
-    </div>
+    <ReactStore.Provider store={store}>
+      <div className="w-full h-full">
+        <Index />
+      </div>
+      <Inspector />
+    </ReactStore.Provider>
   );
 }
 
