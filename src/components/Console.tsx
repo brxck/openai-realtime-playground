@@ -1,65 +1,35 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 
-import { ExtRealtimeEvent, useRealtimeClient } from '@/lib/useRealtimeClient';
-import { useWaveRenderer } from '@/lib/useWaveRenderer';
-import { useUIScroller } from '@/lib/useUIScroller';
+import { useRealtimeClient } from '@/lib/useRealtimeClient';
+import { useScrollToBottom } from '@/lib/useScrollToBottom';
 import { formatTimestamp } from '@/lib/format';
-import { tools } from '@/lib/tools';
 import { Button } from './ui/button';
-
-const instructions = `System settings:
-Tool use: enabled.
-
-Instructions:
-- You are an AI agent responsible for helping test realtime voice capabilities
-- Please make sure to respond with a helpful voice via audio
-- Speak fast, 2x speed.
-- Be kind, helpful, and curteous
-- It is okay to ask the user short followup or clarification questions
-- Use tools and functions you have available liberally, it is part of the training apparatus
-- You have access to the set_memory tool with some defined schemas you can add or delete to. Try not to add unnecessary keys.
-- Be open to exploration and conversation
-
-Personality:
-- Be snarky and sarcastic
-- Try speaking quickly as if excited
-`;
+import { Instructions } from '@/components/Instructions';
 
 export function Console() {
   const startTimeRef = useRef<string>(new Date().toISOString());
-
-  const [realtimeEvents, setRealtimeEvents] = useState<ExtRealtimeEvent[]>([]);
-
-  const { eventsScrollRef } = useUIScroller(realtimeEvents);
-  const {
-    clientCanvasRef,
-    serverCanvasRef,
-    wavRecorderRef,
-    wavStreamPlayerRef,
-  } = useWaveRenderer();
 
   const {
     client,
     isConnected,
     isMuted,
     setIsMuted,
-    connectConversation,
-    disconnectConversation,
-  } = useRealtimeClient(
-    startTimeRef,
-    setRealtimeEvents,
-    wavStreamPlayerRef,
-    wavRecorderRef,
-    instructions,
-    tools
-  );
+    connect,
+    disconnect,
+    events,
+    items,
+    waveRenderer: { clientCanvasRef, serverCanvasRef },
+  } = useRealtimeClient(startTimeRef);
+
+  const { scrollRef: eventsScrollRef } = useScrollToBottom([events]);
+  const { scrollRef: itemsScrollRef } = useScrollToBottom([items]);
 
   return (
     <div className="w-full p-4 overflow-auto md:w-96">
       <div className="flex items-center gap-2 mb-4">
         <Button
           variant={isConnected ? 'destructive' : 'default'}
-          onClick={isConnected ? disconnectConversation : connectConversation}
+          onClick={isConnected ? disconnect : connect}
         >
           {isConnected ? 'Disconnect' : 'Connect'}
         </Button>
@@ -89,44 +59,103 @@ export function Console() {
           className="w-full h-12 rounded bg-gray-50"
         />
       </div>
-      <div ref={eventsScrollRef} className="h-full mt-2 space-y-2">
-        {realtimeEvents.map((event, i) => (
-          <div
-            key={i}
-            className={`text-xs rounded ${
-              event.error
-                ? 'bg-red-50'
-                : event.source === 'server'
-                ? 'bg-green-50'
-                : 'bg-gray-50'
-            }`}
-          >
-            <details className="text-xs">
-              <summary className="flex items-center justify-between p-2">
-                <span>
-                  {('transcript' in event.event && (
-                    <p>{'"' + event.event.transcript + '"'}</p>
-                  )) ||
-                    (event.event.type ===
-                      'response.function_call_arguments.done' &&
-                      'name' in event.event &&
-                      'arguments' in event.event &&
-                      event.event.name + '(' + event.event.arguments + ')') || (
-                      <span className="font-mono">{event.event.type}</span>
-                    ) ||
-                    JSON.stringify(event.event)}
-                </span>
-                <span>
-                  +{formatTimestamp(startTimeRef.current, event.time) + ' '}
-                </span>
-              </summary>
-              <pre className="p-2 pr-0 overflow-auto whitespace-pre max-h-96">
-                {JSON.stringify(event.event, null, 2)}
-              </pre>
-            </details>
-          </div>
-        ))}
-      </div>
+      <Instructions />
+
+      <details className="font-semibold text-sm my-2" open>
+        <summary>Conversation</summary>
+        <div ref={itemsScrollRef} className="text-xs max-h-96 overflow-auto">
+          {items.map((item) => {
+            return (
+              <div className="border-gray-200 border-b py-2" key={item.id}>
+                <div className="font-semibold">
+                  {(item.role as string) || item.type}
+                </div>
+                <div>
+                  {/* tool response */}
+                  {item.type === 'function_call_output' && (
+                    <div>{item.formatted.output}</div>
+                  )}
+                  {/* tool call */}
+                  {!!item.formatted.tool && (
+                    <div>
+                      {item.formatted.tool.name}({item.formatted.tool.arguments}
+                      )
+                    </div>
+                  )}
+                  {!item.formatted.tool && item.role === 'user' && (
+                    <div>
+                      {item.formatted.transcript ||
+                        (item.formatted.audio?.length
+                          ? '(awaiting transcript)'
+                          : item.formatted.text || '(item sent)')}
+                    </div>
+                  )}
+                  {!item.formatted.tool && item.role === 'assistant' && (
+                    <div>
+                      {item.formatted.transcript ||
+                        item.formatted.text ||
+                        '(truncated)'}
+                    </div>
+                  )}
+                  {/* {item.formatted.file && (
+                  <audio src={item.formatted.file.url} controls />
+                )} */}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </details>
+
+      <details className="font-semibold text-sm my-2">
+        <summary>Events</summary>
+        <div
+          ref={eventsScrollRef}
+          className="mt-2 space-y-2 max-h-96 overflow-auto"
+        >
+          {events.map((event, i) => {
+            return (
+              <div
+                key={i}
+                className={`text-xs rounded border ${
+                  'error' in event || 'error' in event.event
+                    ? 'bg-red-50'
+                    : event.source === 'server'
+                      ? 'bg-green-50'
+                      : 'bg-white'
+                }`}
+              >
+                <details className="text-xs">
+                  <summary className="flex items-center p-2">
+                    <span>
+                      {('transcript' in event.event && (
+                        <p>{'"' + event.event.transcript + '"'}</p>
+                      )) ||
+                        (event.event.type ===
+                          'response.function_call_arguments.done' &&
+                          'name' in event.event &&
+                          'arguments' in event.event &&
+                          event.event.name +
+                            '(' +
+                            event.event.arguments +
+                            ')') || (
+                          <span className="font-mono">{event.event.type}</span>
+                        ) ||
+                        JSON.stringify(event.event)}
+                    </span>
+                    <span className="ml-auto">
+                      +{formatTimestamp(startTimeRef.current, event.time) + ' '}
+                    </span>
+                  </summary>
+                  <pre className="p-2 pr-0 overflow-auto whitespace-pre max-h-96">
+                    {JSON.stringify(event.event, null, 2)}
+                  </pre>
+                </details>
+              </div>
+            );
+          })}
+        </div>
+      </details>
     </div>
   );
 }

@@ -16,15 +16,16 @@ export function Data() {
             acc[cellId] = { component: HighlightedCell, label: cellId };
             return acc;
           },
-          {} as Record<string, CustomCell>
+          {} as Record<string, CustomCell>,
         );
         return (
-          <div className="mx-4 my-2">
-            <div className="p-2 font-bold capitalize">{tableId}</div>
-            <div className="border rounded-md">
+          <div className="mx-4 my-2" key={tableId}>
+            <div className="ml-1 px-5 py-1 font-bold capitalize border border-b-0 rounded-t-md bg-white w-fit">
+              {tableId}
+            </div>
+            <div className="border rounded-md bg-white">
               <div className="overflow-hidden rounded-md">
                 <SortedTableInHtmlTable
-                  key={tableId}
                   tableId={tableId}
                   sortOnClick={true}
                   className="w-full p-4 table-auto tinybase-table"

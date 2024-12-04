@@ -1,19 +1,22 @@
 import { WebSocket } from 'ws';
-import { RealtimeClient } from '@openai/realtime-api-beta';
+import { RealtimeAPI } from '@openai/realtime-api-beta';
 import { IncomingMessage } from 'http';
 
 export async function openapiRealtimeRelay(
   ws: WebSocket,
-  req: IncomingMessage
+  req: IncomingMessage,
 ) {
-  const client = new RealtimeClient({ apiKey: process.env.OPENAI_API_KEY });
+  // Original relay used the stateful RealtimeClient, which seems to cause some bugs
+  // https://github.com/openai/openai-realtime-console/issues/462
+  // https://github.com/openai/openai-realtime-console/issues/474
+  const client = new RealtimeAPI({ apiKey: process.env.OPENAI_API_KEY });
 
   // Relay: OpenAI Realtime API Event -> Browser Event
-  client.realtime.on('server.*', (event) => {
-    console.log(`Relaying "${event.type}" to Client`);
+  client.on('server.*', (event) => {
+    //console.log(`Relaying "${event.type}" to Client`);
     ws.send(JSON.stringify(event));
   });
-  client.realtime.on('close', () => ws.close());
+  client.on('close', () => ws.close());
 
   // Relay: Browser Event -> OpenAI Realtime API Event
   // We need to queue data waiting for the OpenAI connection
@@ -22,7 +25,7 @@ export async function openapiRealtimeRelay(
     try {
       const event = JSON.parse(data);
       console.log(`Relaying "${event.type}" to OpenAI`);
-      client.realtime.send(event.type, event);
+      client.send(event.type, event);
     } catch (e) {
       console.error(e.message);
       console.log(`Error parsing event from client: ${data}`);

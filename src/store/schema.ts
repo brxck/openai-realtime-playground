@@ -22,7 +22,9 @@ export const tablesSchema = {
   },
 } satisfies TinyBaseSchemas.TablesSchema;
 
-export const valuesSchema = {} satisfies TinyBaseSchemas.ValuesSchema;
+export const valuesSchema = {
+  instructions: { type: 'string' },
+} satisfies TinyBaseSchemas.ValuesSchema;
 
 export type TablesSchema = typeof tablesSchema;
 export type ValuesSchema = typeof valuesSchema;

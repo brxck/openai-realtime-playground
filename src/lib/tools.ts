@@ -32,7 +32,7 @@ export const tools: ToolDefinition[] = [
         if (params.phone) q.where((get) => get('phone') === params.phone);
       });
       const result = queries.getResultTable(
-        'selectedPeople'
+        'selectedPeople',
       ) as Table<'people'>;
       setPartialTableRows('people', result, {
         accessed: new Date().toISOString(),

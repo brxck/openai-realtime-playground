@@ -1,11 +1,11 @@
 import { createRelationships, createStore } from 'tinybase/with-schemas';
 import { tablesSchema, valuesSchema } from './schema';
-import { tableData } from './data';
+import { tableData, valueData } from './data';
 
 export const store = createStore()
   .setSchema(tablesSchema, valuesSchema)
   .setTables(tableData)
-  .setValues({ accessed: '[]' });
+  .setValues(valueData);
 
 export type Store = typeof store;
 
@@ -14,5 +14,5 @@ relationships.setRelationshipDefinition(
   'petsPeople',
   'pets',
   'people',
-  'owner'
+  'owner',
 );
